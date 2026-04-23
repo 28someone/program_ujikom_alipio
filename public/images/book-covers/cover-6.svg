@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" role="img" aria-labelledby="title">
+  <title>Business Cover</title>
+  <rect width="300" height="400" rx="28" fill="#164e63" />
+  <rect x="42" y="54" width="216" height="292" rx="18" fill="#ecfeff" opacity="0.94" />
+  <path d="M80 286V182M150 286V140M220 286V212" stroke="#0f766e" stroke-width="16" stroke-linecap="round" />
+  <path d="M68 154l70-42 38 26 58-48" stroke="#155e75" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="68" cy="154" r="10" fill="#155e75" />
+  <circle cx="138" cy="112" r="10" fill="#155e75" />
+  <circle cx="176" cy="138" r="10" fill="#155e75" />
+  <circle cx="234" cy="90" r="10" fill="#155e75" />
+  <text x="62" y="92" fill="#155e75" font-family="Arial, sans-serif" font-size="22" font-weight="700">Growth</text>
+</svg>

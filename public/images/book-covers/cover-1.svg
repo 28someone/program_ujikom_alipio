@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" role="img" aria-labelledby="title">
+  <title>Programming Cover</title>
+  <rect width="300" height="400" rx="28" fill="#0f172a" />
+  <rect x="30" y="30" width="240" height="340" rx="20" fill="#111827" stroke="#38bdf8" stroke-width="4" />
+  <text x="42" y="88" fill="#38bdf8" font-family="Arial, sans-serif" font-size="22" font-weight="700">CODE</text>
+  <text x="42" y="122" fill="#e2e8f0" font-family="Arial, sans-serif" font-size="28" font-weight="700">Modern Web</text>
+  <text x="42" y="156" fill="#94a3b8" font-family="Arial, sans-serif" font-size="22">Development</text>
+  <rect x="42" y="208" width="216" height="110" rx="18" fill="#082f49" />
+  <path d="M90 264l-28-20 28-20M210 264l28-20-28-20M130 292l40-96" stroke="#67e8f9" stroke-linecap="round" stroke-linejoin="round" stroke-width="10" fill="none" />
+</svg>

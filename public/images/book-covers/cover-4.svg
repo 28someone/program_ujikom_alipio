@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" role="img" aria-labelledby="title">
+  <title>Science Cover</title>
+  <rect width="300" height="400" rx="28" fill="#312e81" />
+  <circle cx="150" cy="200" r="84" fill="#4338ca" />
+  <circle cx="150" cy="200" r="38" fill="#c7d2fe" />
+  <ellipse cx="150" cy="200" rx="124" ry="48" fill="none" stroke="#a5b4fc" stroke-width="10" />
+  <ellipse cx="150" cy="200" rx="54" ry="126" fill="none" stroke="#818cf8" stroke-width="10" transform="rotate(28 150 200)" />
+  <text x="38" y="90" fill="#e0e7ff" font-family="Arial, sans-serif" font-size="22">Sains Populer</text>
+  <text x="38" y="330" fill="#eef2ff" font-family="Arial, sans-serif" font-size="28" font-weight="700">Eksplorasi Semesta</text>
+</svg>

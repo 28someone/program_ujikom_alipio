@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" role="img" aria-labelledby="title">
+  <title>Novel Cover</title>
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef3c7" />
+      <stop offset="100%" stop-color="#fb7185" />
+    </linearGradient>
+  </defs>
+  <rect width="300" height="400" rx="28" fill="url(#sky)" />
+  <circle cx="220" cy="92" r="36" fill="#fff7ed" opacity="0.9" />
+  <path d="M0 274c48-26 88-30 124-12 40 22 80 22 176-8v146H0z" fill="#7c2d12" opacity="0.84" />
+  <path d="M0 304c52-30 98-28 154 6 46 26 86 24 146-4v94H0z" fill="#431407" opacity="0.92" />
+  <text x="34" y="88" fill="#7c2d12" font-family="Georgia, serif" font-size="22">Cerita</text>
+  <text x="34" y="126" fill="#4c0519" font-family="Georgia, serif" font-size="34" font-weight="700">Sore yang</text>
+  <text x="34" y="164" fill="#4c0519" font-family="Georgia, serif" font-size="34" font-weight="700">Panjang</text>
+</svg>

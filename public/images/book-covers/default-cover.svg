@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" role="img" aria-labelledby="title">
+  <title>Default Book Cover</title>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f3efe5" />
+      <stop offset="100%" stop-color="#d9c7a3" />
+    </linearGradient>
+  </defs>
+  <rect width="300" height="400" rx="28" fill="url(#bg)" />
+  <rect x="28" y="28" width="244" height="344" rx="20" fill="#fffaf0" opacity="0.75" />
+  <rect x="56" y="72" width="24" height="256" rx="12" fill="#9a3412" />
+  <path d="M104 116h116M104 156h92M104 196h108M104 236h80" stroke="#7c2d12" stroke-linecap="round" stroke-width="16" opacity="0.65" />
+  <text x="104" y="302" fill="#7c2d12" font-family="Georgia, serif" font-size="24" font-weight="700">Library</text>
+</svg>

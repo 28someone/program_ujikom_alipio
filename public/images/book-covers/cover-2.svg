@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" role="img" aria-labelledby="title">
+  <title>Network Cover</title>
+  <rect width="300" height="400" rx="28" fill="#052e2b" />
+  <circle cx="72" cy="108" r="28" fill="#5eead4" />
+  <circle cx="226" cy="96" r="24" fill="#99f6e4" />
+  <circle cx="150" cy="212" r="34" fill="#2dd4bf" />
+  <path d="M72 108l78 104 76-116" stroke="#ccfbf1" stroke-width="10" fill="none" stroke-linecap="round" />
+  <rect x="38" y="286" width="224" height="56" rx="16" fill="#ecfeff" opacity="0.9" />
+  <text x="52" y="322" fill="#115e59" font-family="Arial, sans-serif" font-size="24" font-weight="700">Computer Network</text>
+</svg>

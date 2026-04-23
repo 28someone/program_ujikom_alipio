@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" role="img" aria-labelledby="title">
+  <title>History Cover</title>
+  <rect width="300" height="400" rx="28" fill="#78350f" />
+  <rect x="34" y="34" width="232" height="332" rx="20" fill="#fef3c7" opacity="0.9" />
+  <path d="M72 102h156M72 136h156M72 170h112" stroke="#92400e" stroke-width="14" stroke-linecap="round" />
+  <circle cx="104" cy="256" r="42" fill="#d97706" opacity="0.85" />
+  <path d="M104 226v32l22 18" stroke="#fff7ed" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+  <text x="152" y="264" fill="#78350f" font-family="Georgia, serif" font-size="24" font-weight="700">Sejarah</text>
+  <text x="152" y="296" fill="#78350f" font-family="Georgia, serif" font-size="20">Nusantara</text>
+</svg>
