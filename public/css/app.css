@@ -572,6 +572,63 @@ th, td { padding: 14px 12px; border-bottom: 1px solid var(--border); text-align:
 .badge.return_rejected { background: #ffe4e6; color: #be123c; }
 .badge.fine-paid { background: #dcfce7; color: #15803d; }
 .badge.fine-unpaid { background: #fef3c7; color: #b45309; }
+.modal-open { overflow: hidden; }
+.reason-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+.reason-modal[hidden] { display: none; }
+.reason-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.48);
+    backdrop-filter: blur(4px);
+}
+.reason-modal-dialog {
+    position: relative;
+    width: min(560px, 100%);
+    padding: 28px;
+    border-radius: 28px;
+    background:
+        radial-gradient(circle at top right, rgba(15,118,110,0.1), transparent 28%),
+        linear-gradient(180deg, color-mix(in srgb, var(--surface-strong) 98%, transparent), color-mix(in srgb, var(--surface) 96%, transparent));
+    border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+    box-shadow: 0 28px 60px rgba(15, 23, 42, 0.26);
+    display: grid;
+    gap: 18px;
+}
+.reason-modal-head h3 {
+    margin: 0 0 8px;
+    font-size: 1.6rem;
+}
+.reason-modal-head .muted {
+    margin: 0;
+    line-height: 1.65;
+}
+.reason-modal-body {
+    display: grid;
+    gap: 12px;
+}
+.reason-modal-body textarea {
+    min-height: 140px;
+    resize: vertical;
+}
+.reason-modal-error {
+    margin: 0;
+    color: var(--danger);
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+.reason-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
@@ -806,5 +863,21 @@ html[data-theme="dark"] .pagination-button.is-active {
         width: 100%;
         justify-content: flex-start;
         overflow-x: auto;
+    }
+    .reason-modal {
+        padding: 18px;
+    }
+    .reason-modal-dialog {
+        padding: 22px;
+        border-radius: 24px;
+    }
+    .reason-modal-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+    .reason-modal-actions .button,
+    .reason-modal-actions .button-outline-inline {
+        width: 100%;
+        justify-content: center;
     }
 }

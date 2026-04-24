@@ -23,6 +23,8 @@ class Loan extends Model
         'status',
         'note',
         'return_note',
+        'rejection_reason',
+        'return_rejection_reason',
         'fine_amount',
         'fine_paid_at',
         'fine_paid_by',

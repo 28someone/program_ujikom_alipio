@@ -93,8 +93,9 @@
                                         @csrf
                                         <button type="submit" class="text-link">Setujui</button>
                                     </form>
-                                    <form action="{{ route('loans.reject', $loan) }}" method="POST">
+                                    <form action="{{ route('loans.reject', $loan) }}" method="POST" class="reject-loan-form">
                                         @csrf
+                                        <input type="hidden" name="rejection_reason">
                                         <button type="submit" class="text-link danger-link">Tolak</button>
                                     </form>
                                 @endif
@@ -103,8 +104,9 @@
                                         @csrf
                                         <button type="submit" class="text-link">Setujui Pengembalian</button>
                                     </form>
-                                    <form action="{{ route('loans.return.reject', $loan) }}" method="POST">
+                                    <form action="{{ route('loans.return.reject', $loan) }}" method="POST" class="reject-return-form">
                                         @csrf
+                                        <input type="hidden" name="return_rejection_reason">
                                         <button type="submit" class="text-link danger-link">Tolak Pengembalian</button>
                                     </form>
                                 @endif
@@ -130,13 +132,19 @@
                                     <span class="table-note">Menunggu persetujuan admin</span>
                                 @endif
                                 @if(! $isAdmin && $loan->status === 'rejected')
-                                    <span class="table-note">Permintaan berstatus rejected oleh admin</span>
+                                    <span class="table-note">Permintaan peminjaman ditolak admin.</span>
+                                    @if($loan->rejection_reason)
+                                        <p class="table-note">Alasan: {{ $loan->rejection_reason }}</p>
+                                    @endif
                                 @endif
                                 @if(! $isAdmin && $loan->status === 'return_pending')
                                     <span class="table-note">Permintaan pengembalian menunggu persetujuan admin</span>
                                 @endif
                                 @if(! $isAdmin && $loan->status === 'return_rejected')
                                     <span class="table-note">Pengembalian ditolak admin. Silakan ajukan ulang setelah konfirmasi.</span>
+                                    @if($loan->return_rejection_reason)
+                                        <p class="table-note">Alasan: {{ $loan->return_rejection_reason }}</p>
+                                    @endif
                                 @endif
                                 @if($isAdmin)
                                     <a href="{{ route('loans.edit', $loan) }}" class="text-link">Edit</a>
@@ -157,4 +165,122 @@
 
         <div class="pagination-wrap">{{ $loans->links() }}</div>
     </section>
+
+    @if($isAdmin)
+        <div class="reason-modal" id="reason-modal" hidden>
+            <div class="reason-modal-backdrop" data-modal-close></div>
+            <div class="reason-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reason-modal-title">
+                <div class="reason-modal-head">
+                    <p class="eyebrow">Konfirmasi Admin</p>
+                    <h3 id="reason-modal-title">Alasan Penolakan</h3>
+                    <p class="muted" id="reason-modal-description">Tuliskan alasan yang akan ditampilkan kepada pengguna.</p>
+                </div>
+                <div class="reason-modal-body">
+                    <label class="full">
+                        <span>Alasan</span>
+                        <textarea id="reason-modal-input" rows="5" placeholder="Contoh: Buku belum memenuhi syarat pemeriksaan admin."></textarea>
+                    </label>
+                    <p class="reason-modal-error" id="reason-modal-error" hidden>Alasan penolakan wajib diisi.</p>
+                </div>
+                <div class="reason-modal-actions">
+                    <button type="button" class="button button-outline-inline" id="reason-modal-cancel">Batal</button>
+                    <button type="button" class="button" id="reason-modal-submit">Simpan Alasan</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            (() => {
+                const modal = document.getElementById('reason-modal');
+                const modalTitle = document.getElementById('reason-modal-title');
+                const modalDescription = document.getElementById('reason-modal-description');
+                const modalInput = document.getElementById('reason-modal-input');
+                const modalError = document.getElementById('reason-modal-error');
+                const modalSubmit = document.getElementById('reason-modal-submit');
+                const modalCancel = document.getElementById('reason-modal-cancel');
+                let activeForm = null;
+                let activeInput = null;
+
+                const openModal = ({ form, inputName, title, description, placeholder, actionLabel }) => {
+                    activeForm = form;
+                    activeInput = form.querySelector(`input[name="${inputName}"]`);
+                    modalTitle.textContent = title;
+                    modalDescription.textContent = description;
+                    modalInput.value = '';
+                    modalInput.placeholder = placeholder;
+                    modalSubmit.textContent = actionLabel;
+                    modalError.hidden = true;
+                    modal.hidden = false;
+                    document.body.classList.add('modal-open');
+                    window.setTimeout(() => modalInput.focus(), 30);
+                };
+
+                const closeModal = () => {
+                    modal.hidden = true;
+                    document.body.classList.remove('modal-open');
+                    activeForm = null;
+                    activeInput = null;
+                    modalError.hidden = true;
+                    modalInput.value = '';
+                };
+
+                document.querySelectorAll('.reject-loan-form').forEach((form) => {
+                    form.addEventListener('submit', (event) => {
+                        event.preventDefault();
+
+                        openModal({
+                            form,
+                            inputName: 'rejection_reason',
+                            title: 'Tolak Peminjaman',
+                            description: 'Masukkan alasan yang akan dikirim ke akun pengguna agar mereka tahu kenapa permintaan peminjaman ditolak.',
+                            placeholder: 'Contoh: Buku sedang dalam proses perbaikan dan belum bisa dipinjam.',
+                            actionLabel: 'Tolak Peminjaman',
+                        });
+                    });
+                });
+
+                document.querySelectorAll('.reject-return-form').forEach((form) => {
+                    form.addEventListener('submit', (event) => {
+                        event.preventDefault();
+
+                        openModal({
+                            form,
+                            inputName: 'return_rejection_reason',
+                            title: 'Tolak Pengembalian',
+                            description: 'Masukkan alasan penolakan pengembalian agar pengguna bisa melakukan perbaikan atau konfirmasi ulang.',
+                            placeholder: 'Contoh: Buku belum diperiksa lengkap. Silakan datang ke petugas perpustakaan.',
+                            actionLabel: 'Tolak Pengembalian',
+                        });
+                    });
+                });
+
+                modalSubmit.addEventListener('click', () => {
+                    const reason = modalInput.value.trim();
+
+                    if (!reason || !activeForm || !activeInput) {
+                        modalError.hidden = false;
+                        modalInput.focus();
+                        return;
+                    }
+
+                    activeInput.value = reason;
+                    const targetForm = activeForm;
+                    closeModal();
+                    targetForm.submit();
+                });
+
+                modalCancel.addEventListener('click', closeModal);
+
+                modal.querySelectorAll('[data-modal-close]').forEach((element) => {
+                    element.addEventListener('click', closeModal);
+                });
+
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape' && !modal.hidden) {
+                        closeModal();
+                    }
+                });
+            })();
+        </script>
+    @endif
 @endsection

@@ -209,4 +209,75 @@ class LibraryFlowTest extends TestCase
         $this->assertNotNull($loan->fine_paid_at);
         $this->assertSame($admin->id, $loan->fine_paid_by);
     }
+
+    public function test_admin_rejecting_loan_must_store_reason(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $member = User::factory()->create();
+        $category = Category::create([
+            'name' => 'Komputer',
+            'slug' => 'komputer',
+        ]);
+
+        $book = Book::create([
+            'category_id' => $category->id,
+            'code' => 'BK-REJECT-1',
+            'title' => 'Buku Ditolak',
+            'author' => 'Penguji',
+            'stock_total' => 2,
+            'stock_available' => 2,
+        ]);
+
+        $loan = Loan::create([
+            'loan_code' => 'TRX-0300',
+            'user_id' => $member->id,
+            'book_id' => $book->id,
+            'borrowed_at' => now()->toDateString(),
+            'due_at' => now()->addDays(7)->toDateString(),
+            'status' => 'pending',
+            'quantity' => 1,
+        ]);
+
+        $this->actingAs($admin)->post(route('loans.reject', $loan), [
+            'rejection_reason' => 'Stok fisik sedang tidak siap dipinjam.',
+        ])->assertRedirect(route('loans.index'));
+
+        $this->assertSame('Stok fisik sedang tidak siap dipinjam.', $loan->fresh()->rejection_reason);
+    }
+
+    public function test_admin_rejecting_return_must_store_reason(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $member = User::factory()->create();
+        $category = Category::create([
+            'name' => 'Sejarah',
+            'slug' => 'sejarah',
+        ]);
+
+        $book = Book::create([
+            'category_id' => $category->id,
+            'code' => 'BK-REJECT-2',
+            'title' => 'Buku Pengembalian',
+            'author' => 'Penguji',
+            'stock_total' => 2,
+            'stock_available' => 1,
+        ]);
+
+        $loan = Loan::create([
+            'loan_code' => 'TRX-0301',
+            'user_id' => $member->id,
+            'book_id' => $book->id,
+            'processed_by' => $admin->id,
+            'borrowed_at' => now()->subDays(4)->toDateString(),
+            'due_at' => now()->addDays(3)->toDateString(),
+            'status' => 'return_pending',
+            'quantity' => 1,
+        ]);
+
+        $this->actingAs($admin)->post(route('loans.return.reject', $loan), [
+            'return_rejection_reason' => 'Buku belum diperiksa lengkap, mohon datang ke petugas.',
+        ])->assertRedirect(route('loans.index'));
+
+        $this->assertSame('Buku belum diperiksa lengkap, mohon datang ke petugas.', $loan->fresh()->return_rejection_reason);
+    }
 }

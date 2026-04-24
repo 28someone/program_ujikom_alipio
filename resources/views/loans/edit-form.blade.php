@@ -38,6 +38,14 @@
             <span>Catatan</span>
             <textarea name="note" rows="4">{{ old('note', $loan->note) }}</textarea>
         </label>
+        <label class="full">
+            <span>Alasan Penolakan Peminjaman</span>
+            <textarea name="rejection_reason" rows="3" placeholder="Wajib diisi jika status diubah menjadi rejected">{{ old('rejection_reason', $loan->rejection_reason) }}</textarea>
+        </label>
+        <label class="full">
+            <span>Alasan Penolakan Pengembalian</span>
+            <textarea name="return_rejection_reason" rows="3" placeholder="Wajib diisi jika status diubah menjadi return_rejected">{{ old('return_rejection_reason', $loan->return_rejection_reason) }}</textarea>
+        </label>
         <button type="submit" class="button full">Simpan Perubahan</button>
     </form>
 </section>

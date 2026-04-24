@@ -148,7 +148,21 @@ class LoanController extends Controller
             'due_at' => ['required', 'date', 'after_or_equal:borrowed_at'],
             'status' => ['required', Rule::in(['pending', 'rejected', 'borrowed', 'returned', 'late', 'return_pending', 'return_rejected'])],
             'note' => ['nullable', 'string'],
+            'rejection_reason' => ['nullable', 'string'],
+            'return_rejection_reason' => ['nullable', 'string'],
         ]);
+
+        if ($validated['status'] === 'rejected' && blank($validated['rejection_reason'] ?? null)) {
+            return back()->withErrors([
+                'rejection_reason' => 'Alasan penolakan peminjaman wajib diisi.',
+            ])->withInput();
+        }
+
+        if ($validated['status'] === 'return_rejected' && blank($validated['return_rejection_reason'] ?? null)) {
+            return back()->withErrors([
+                'return_rejection_reason' => 'Alasan penolakan pengembalian wajib diisi.',
+            ])->withInput();
+        }
 
         $wasActive = in_array($loan->status, $this->activeStatuses(), true);
         $willBeActive = in_array($validated['status'], $this->activeStatuses(), true);
@@ -183,6 +197,12 @@ class LoanController extends Controller
                     ? null
                     : $request->user()->id,
                 'status' => $resolvedStatus,
+                'rejection_reason' => $resolvedStatus === 'rejected'
+                    ? ($validated['rejection_reason'] ?? null)
+                    : null,
+                'return_rejection_reason' => $resolvedStatus === 'return_rejected'
+                    ? ($validated['return_rejection_reason'] ?? null)
+                    : null,
                 'fine_amount' => $resolvedStatus === 'returned'
                     ? $loan->calculateFineAmount(Carbon::parse($returnedAt))
                     : 0,
@@ -260,9 +280,15 @@ class LoanController extends Controller
             return back()->with('error', 'Transaksi ini tidak lagi menunggu persetujuan admin.');
         }
 
+        $validated = $request->validate([
+            'rejection_reason' => ['required', 'string'],
+        ]);
+
         $loan->update([
             'processed_by' => $request->user()->id,
             'status' => 'rejected',
+            'rejection_reason' => $validated['rejection_reason'],
+            'return_rejection_reason' => null,
             'fine_amount' => 0,
             'fine_paid_at' => null,
             'fine_paid_by' => null,
@@ -280,10 +306,11 @@ class LoanController extends Controller
                 'anggota' => $loan->user->name,
                 'buku' => $loan->book->title,
                 'status' => $loan->status,
+                'alasan' => $loan->rejection_reason,
             ],
         );
 
-        return redirect()->route('loans.index')->with('success', 'Permintaan peminjaman berhasil diubah menjadi Rejected.');
+        return redirect()->route('loans.index')->with('success', 'Permintaan peminjaman berhasil ditolak.');
     }
 
     public function destroy(Request $request, Loan $loan): RedirectResponse
@@ -351,6 +378,7 @@ class LoanController extends Controller
                 'returned_at' => null,
                 'status' => 'return_pending',
                 'return_note' => $request->input('return_note'),
+                'return_rejection_reason' => null,
                 'fine_amount' => 0,
                 'fine_paid_at' => null,
                 'fine_paid_by' => null,
@@ -391,6 +419,7 @@ class LoanController extends Controller
                 'processed_by' => $request->user()->id,
                 'returned_at' => $returnedAt->toDateString(),
                 'status' => 'returned',
+                'return_rejection_reason' => null,
                 'fine_amount' => $loan->calculateFineAmount($returnedAt),
                 'fine_paid_at' => null,
                 'fine_paid_by' => null,
@@ -429,10 +458,15 @@ class LoanController extends Controller
             return back()->with('error', 'Transaksi ini tidak sedang menunggu persetujuan pengembalian.');
         }
 
+        $validated = $request->validate([
+            'return_rejection_reason' => ['required', 'string'],
+        ]);
+
         $loan->update([
             'processed_by' => $request->user()->id,
             'returned_at' => null,
             'status' => 'return_rejected',
+            'return_rejection_reason' => $validated['return_rejection_reason'],
             'fine_amount' => 0,
             'fine_paid_at' => null,
             'fine_paid_by' => null,
@@ -449,6 +483,7 @@ class LoanController extends Controller
                 'anggota' => $loan->user->name,
                 'buku' => $loan->book->title,
                 'status' => $loan->status,
+                'alasan' => $loan->return_rejection_reason,
             ],
         );
 
