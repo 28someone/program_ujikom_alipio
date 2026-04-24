@@ -100,7 +100,7 @@ class MemberController extends Controller
     {
         abort_unless($member->isMember(), 404);
 
-        if ($member->loans()->whereIn('status', ['pending', 'borrowed', 'late'])->exists()) {
+        if ($member->loans()->whereIn('status', ['pending', 'borrowed', 'late', 'return_pending', 'return_rejected'])->exists()) {
             return back()->with('error', 'Anggota masih memiliki transaksi aktif dan tidak bisa dihapus.');
         }
 

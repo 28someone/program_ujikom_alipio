@@ -25,6 +25,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/koleksi-buku', [BookController::class, 'index'])->name('catalog.index');
     Route::get('/transaksi', [LoanController::class, 'index'])->name('loans.index');
     Route::post('/transaksi/{loan}/pengembalian', [LoanController::class, 'returnBook'])->name('loans.return');
+    Route::post('/transaksi/{loan}/pengembalian/approve', [LoanController::class, 'approveReturn'])->name('loans.return.approve');
+    Route::post('/transaksi/{loan}/pengembalian/reject', [LoanController::class, 'rejectReturn'])->name('loans.return.reject');
     Route::post('/transaksi/{loan}/approve', [LoanController::class, 'approve'])->name('loans.approve');
     Route::post('/transaksi/{loan}/reject', [LoanController::class, 'reject'])->name('loans.reject');
 

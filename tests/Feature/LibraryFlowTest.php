@@ -45,8 +45,9 @@ class LibraryFlowTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
-    public function test_member_can_borrow_book_and_stock_is_reduced(): void
+    public function test_member_borrow_request_needs_admin_approval_before_stock_is_reduced(): void
     {
+        $admin = User::factory()->create(['role' => 'admin']);
         $member = User::factory()->create();
         $category = Category::create([
             'name' => 'Pemrograman',
@@ -72,8 +73,16 @@ class LibraryFlowTest extends TestCase
         $this->assertDatabaseHas('loans', [
             'user_id' => $member->id,
             'book_id' => $book->id,
-            'status' => 'borrowed',
+            'status' => 'pending',
         ]);
+        $this->assertSame(2, $book->fresh()->stock_available);
+
+        $loan = Loan::where('user_id', $member->id)->where('book_id', $book->id)->latest()->firstOrFail();
+
+        $this->actingAs($admin)->post(route('loans.approve', $loan))
+            ->assertRedirect(route('loans.index'));
+
+        $this->assertSame('borrowed', $loan->fresh()->status);
         $this->assertSame(1, $book->fresh()->stock_available);
     }
 
@@ -109,6 +118,12 @@ class LibraryFlowTest extends TestCase
         $response = $this->actingAs($member)->post(route('loans.return', $loan));
 
         $response->assertRedirect(route('loans.index'));
+        $this->assertSame('return_pending', $loan->fresh()->status);
+        $this->assertSame(2, $book->fresh()->stock_available);
+
+        $this->actingAs($admin)->post(route('loans.return.approve', $loan))
+            ->assertRedirect(route('loans.index'));
+
         $this->assertSame('returned', $loan->fresh()->status);
         $this->assertSame(3, $book->fresh()->stock_available);
     }
@@ -144,6 +159,12 @@ class LibraryFlowTest extends TestCase
         ]);
 
         $this->actingAs($member)->post(route('loans.return', $loan))
+            ->assertRedirect(route('loans.index'));
+
+        $this->assertSame('return_pending', $loan->fresh()->status);
+        $this->assertSame(0, $loan->fresh()->fine_amount);
+
+        $this->actingAs($admin)->post(route('loans.return.approve', $loan))
             ->assertRedirect(route('loans.index'));
 
         $this->assertSame(3 * config('library.fine_per_day'), $loan->fresh()->fine_amount);

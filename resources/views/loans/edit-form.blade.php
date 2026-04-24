@@ -29,7 +29,7 @@
         <label>
             <span>Status</span>
             <select name="status" required>
-                @foreach(['pending', 'rejected', 'borrowed', 'late', 'returned'] as $status)
+                @foreach(['pending', 'rejected', 'borrowed', 'late', 'return_pending', 'return_rejected', 'returned'] as $status)
                     <option value="{{ $status }}" @selected(old('status', $loan->status) === $status)>{{ strtoupper($status) }}</option>
                 @endforeach
             </select>

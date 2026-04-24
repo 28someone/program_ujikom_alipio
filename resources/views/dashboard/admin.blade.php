@@ -50,9 +50,14 @@
                 <p>Permintaan pinjam yang masih menunggu persetujuan admin.</p>
             </article>
             <article class="stat-card stat-card-clean">
-                <span>Peminjaman Rejected</span>
+                <span>Peminjaman Ditolak</span>
                 <strong>{{ $rejectedLoanCount }}</strong>
-                <p>Permintaan peminjaman yang berstatus rejected oleh admin.</p>
+                <p>Permintaan peminjaman yang ditolak oleh admin.</p>
+            </article>
+            <article class="stat-card stat-card-clean">
+                <span>Pengembalian Ditolak</span>
+                <strong>{{ $rejectedReturnCount }}</strong>
+                <p>Permintaan pengembalian yang ditolak admin dan perlu diajukan ulang.</p>
             </article>
             <article class="stat-card stat-card-clean">
                 <span>Transaksi Aktif</span>

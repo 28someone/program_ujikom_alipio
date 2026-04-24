@@ -17,7 +17,7 @@ class LoanController extends Controller
 {
     private function activeStatuses(): array
     {
-        return ['borrowed', 'late'];
+        return ['borrowed', 'late', 'return_pending', 'return_rejected'];
     }
 
     private function determineLoanStatus(string $dueAt, ?string $returnedAt = null): string
@@ -146,7 +146,7 @@ class LoanController extends Controller
         $validated = $request->validate([
             'borrowed_at' => ['required', 'date'],
             'due_at' => ['required', 'date', 'after_or_equal:borrowed_at'],
-            'status' => ['required', Rule::in(['pending', 'rejected', 'borrowed', 'returned', 'late'])],
+            'status' => ['required', Rule::in(['pending', 'rejected', 'borrowed', 'returned', 'late', 'return_pending', 'return_rejected'])],
             'note' => ['nullable', 'string'],
         ]);
 
@@ -170,18 +170,20 @@ class LoanController extends Controller
                 ? ($loan->returned_at ?? now()->toDateString())
                 : null;
 
+            $resolvedStatus = match ($validated['status']) {
+                'pending', 'rejected', 'return_pending', 'return_rejected' => $validated['status'],
+                'returned' => 'returned',
+                default => $this->determineLoanStatus($validated['due_at']),
+            };
+
             $loan->update([
                 ...$validated,
                 'returned_at' => $returnedAt,
-                'processed_by' => in_array($validated['status'], ['pending', 'rejected'], true)
-                    ? ($validated['status'] === 'rejected' ? $request->user()->id : null)
-                    : ($loan->processed_by ?? $request->user()->id),
-                'status' => in_array($validated['status'], ['pending', 'rejected'], true)
-                    ? $validated['status']
-                    : ($validated['status'] === 'returned'
-                        ? 'returned'
-                        : $this->determineLoanStatus($validated['due_at'])),
-                'fine_amount' => $validated['status'] === 'returned'
+                'processed_by' => $resolvedStatus === 'pending'
+                    ? null
+                    : $request->user()->id,
+                'status' => $resolvedStatus,
+                'fine_amount' => $resolvedStatus === 'returned'
                     ? $loan->calculateFineAmount(Carbon::parse($returnedAt))
                     : 0,
             ]);
@@ -321,10 +323,14 @@ class LoanController extends Controller
     public function returnBook(Request $request, Loan $loan): RedirectResponse
     {
         $user = $request->user();
-        abort_unless($loan->user_id === $user->id || $user->isAdmin(), 403);
+        abort_unless($loan->user_id === $user->id, 403);
 
         if ($loan->status === 'returned') {
             return back()->with('error', 'Buku ini sudah dikembalikan.');
+        }
+
+        if ($loan->status === 'return_pending') {
+            return back()->with('error', 'Permintaan pengembalian buku ini sedang menunggu persetujuan admin.');
         }
 
         if ($loan->status === 'pending') {
@@ -335,16 +341,13 @@ class LoanController extends Controller
             return back()->with('error', 'Peminjaman ini berstatus Rejected dan tidak dapat diproses sebagai pengembalian.');
         }
 
-        DB::transaction(function () use ($loan, $request, $user) {
-            $loan->book->increment('stock_available');
-            $returnedAt = now();
-
+        DB::transaction(function () use ($loan, $request) {
             $loan->update([
-                'processed_by' => $user->id,
-                'returned_at' => $returnedAt->toDateString(),
-                'status' => 'returned',
+                'processed_by' => null,
+                'returned_at' => null,
+                'status' => 'return_pending',
                 'return_note' => $request->input('return_note'),
-                'fine_amount' => $loan->calculateFineAmount($returnedAt),
+                'fine_amount' => 0,
             ]);
         });
 
@@ -352,8 +355,46 @@ class LoanController extends Controller
 
         ActivityLogger::log(
             $user,
-            'loan.return',
-            'Memproses pengembalian buku untuk transaksi: '.$loan->loan_code,
+            'loan.return.request',
+            'Mengajukan pengembalian buku untuk transaksi: '.$loan->loan_code,
+            $loan,
+            [
+                'anggota' => $loan->user->name,
+                'buku' => $loan->book->title,
+                'status' => $loan->status,
+            ],
+        );
+
+        return redirect()->route('loans.index')->with('success', 'Permintaan pengembalian berhasil dikirim dan menunggu persetujuan admin.');
+    }
+
+    public function approveReturn(Request $request, Loan $loan): RedirectResponse
+    {
+        abort_unless($request->user()->isAdmin(), 403);
+
+        if ($loan->status !== 'return_pending') {
+            return back()->with('error', 'Transaksi ini tidak sedang menunggu persetujuan pengembalian.');
+        }
+
+        DB::transaction(function () use ($loan, $request) {
+            $returnedAt = now();
+
+            $loan->book->increment('stock_available');
+
+            $loan->update([
+                'processed_by' => $request->user()->id,
+                'returned_at' => $returnedAt->toDateString(),
+                'status' => 'returned',
+                'fine_amount' => $loan->calculateFineAmount($returnedAt),
+            ]);
+        });
+
+        $loan->load(['user', 'book']);
+
+        ActivityLogger::log(
+            $request->user(),
+            'loan.return.approve',
+            'Menyetujui pengembalian buku: '.$loan->loan_code,
             $loan,
             [
                 'anggota' => $loan->user->name,
@@ -363,12 +404,44 @@ class LoanController extends Controller
             ],
         );
 
-        $message = 'Pengembalian buku berhasil diproses.';
+        $message = 'Pengembalian buku berhasil disetujui.';
 
         if ($loan->fine_amount > 0) {
             $message .= ' Denda: Rp '.number_format($loan->fine_amount, 0, ',', '.').'.';
         }
 
         return redirect()->route('loans.index')->with('success', $message);
+    }
+
+    public function rejectReturn(Request $request, Loan $loan): RedirectResponse
+    {
+        abort_unless($request->user()->isAdmin(), 403);
+
+        if ($loan->status !== 'return_pending') {
+            return back()->with('error', 'Transaksi ini tidak sedang menunggu persetujuan pengembalian.');
+        }
+
+        $loan->update([
+            'processed_by' => $request->user()->id,
+            'returned_at' => null,
+            'status' => 'return_rejected',
+            'fine_amount' => 0,
+        ]);
+
+        $loan->load(['user', 'book']);
+
+        ActivityLogger::log(
+            $request->user(),
+            'loan.return.reject',
+            'Menolak pengembalian buku: '.$loan->loan_code,
+            $loan,
+            [
+                'anggota' => $loan->user->name,
+                'buku' => $loan->book->title,
+                'status' => $loan->status,
+            ],
+        );
+
+        return redirect()->route('loans.index')->with('success', 'Permintaan pengembalian berhasil ditolak.');
     }
 }

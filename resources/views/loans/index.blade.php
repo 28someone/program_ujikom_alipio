@@ -22,6 +22,8 @@
                 <option value="rejected" @selected(request('status') === 'rejected')>Rejected</option>
                 <option value="borrowed" @selected(request('status') === 'borrowed')>Borrowed</option>
                 <option value="late" @selected(request('status') === 'late')>Late</option>
+                <option value="return_pending" @selected(request('status') === 'return_pending')>Return Pending</option>
+                <option value="return_rejected" @selected(request('status') === 'return_rejected')>Return Rejected</option>
                 <option value="returned" @selected(request('status') === 'returned')>Returned</option>
             </select>
             <button type="submit" class="button">Cari</button>
@@ -55,7 +57,17 @@
                             <td>{{ $loan->due_at?->format('d M Y') }}</td>
                             <td>
                                 <span class="badge {{ $loan->status }}">
-                                    {{ $loan->status === 'rejected' ? 'REJECTED' : strtoupper($loan->status) }}
+                                    {{
+                                        [
+                                            'pending' => 'PENDING',
+                                            'rejected' => 'REJECTED',
+                                            'borrowed' => 'BORROWED',
+                                            'late' => 'LATE',
+                                            'return_pending' => 'RETURN PENDING',
+                                            'return_rejected' => 'RETURN REJECTED',
+                                            'returned' => 'RETURNED',
+                                        ][$loan->status] ?? strtoupper($loan->status)
+                                    }}
                                 </span>
                             </td>
                             <td>
@@ -75,10 +87,20 @@
                                         <button type="submit" class="text-link danger-link">Tolak</button>
                                     </form>
                                 @endif
-                                @if(in_array($loan->status, ['borrowed', 'late'], true))
+                                @if($isAdmin && $loan->status === 'return_pending')
+                                    <form action="{{ route('loans.return.approve', $loan) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="text-link">Setujui Pengembalian</button>
+                                    </form>
+                                    <form action="{{ route('loans.return.reject', $loan) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="text-link danger-link">Tolak Pengembalian</button>
+                                    </form>
+                                @endif
+                                @if(! $isAdmin && in_array($loan->status, ['borrowed', 'late', 'return_rejected'], true))
                                     <form action="{{ route('loans.return', $loan) }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="text-link">Kembalikan</button>
+                                        <button type="submit" class="text-link">Ajukan Pengembalian</button>
                                     </form>
                                 @endif
                                 @if(! $isAdmin && $loan->status === 'pending')
@@ -86,6 +108,12 @@
                                 @endif
                                 @if(! $isAdmin && $loan->status === 'rejected')
                                     <span class="table-note">Permintaan berstatus rejected oleh admin</span>
+                                @endif
+                                @if(! $isAdmin && $loan->status === 'return_pending')
+                                    <span class="table-note">Permintaan pengembalian menunggu persetujuan admin</span>
+                                @endif
+                                @if(! $isAdmin && $loan->status === 'return_rejected')
+                                    <span class="table-note">Pengembalian ditolak admin. Silakan ajukan ulang setelah konfirmasi.</span>
                                 @endif
                                 @if($isAdmin)
                                     <a href="{{ route('loans.edit', $loan) }}" class="text-link">Edit</a>

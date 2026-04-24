@@ -110,7 +110,7 @@ class BookController extends Controller
 
     public function destroy(Request $request, Book $book): RedirectResponse
     {
-        if ($book->loans()->whereIn('status', ['pending', 'borrowed', 'late'])->exists()) {
+        if ($book->loans()->whereIn('status', ['pending', 'borrowed', 'late', 'return_pending', 'return_rejected'])->exists()) {
             return back()->with('error', 'Buku masih memiliki transaksi aktif dan tidak bisa dihapus.');
         }
 
