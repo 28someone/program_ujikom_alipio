@@ -186,6 +186,8 @@ class LoanController extends Controller
                 'fine_amount' => $resolvedStatus === 'returned'
                     ? $loan->calculateFineAmount(Carbon::parse($returnedAt))
                     : 0,
+                'fine_paid_at' => null,
+                'fine_paid_by' => null,
             ]);
         });
 
@@ -262,6 +264,8 @@ class LoanController extends Controller
             'processed_by' => $request->user()->id,
             'status' => 'rejected',
             'fine_amount' => 0,
+            'fine_paid_at' => null,
+            'fine_paid_by' => null,
             'return_note' => null,
         ]);
 
@@ -348,6 +352,8 @@ class LoanController extends Controller
                 'status' => 'return_pending',
                 'return_note' => $request->input('return_note'),
                 'fine_amount' => 0,
+                'fine_paid_at' => null,
+                'fine_paid_by' => null,
             ]);
         });
 
@@ -386,6 +392,8 @@ class LoanController extends Controller
                 'returned_at' => $returnedAt->toDateString(),
                 'status' => 'returned',
                 'fine_amount' => $loan->calculateFineAmount($returnedAt),
+                'fine_paid_at' => null,
+                'fine_paid_by' => null,
             ]);
         });
 
@@ -426,6 +434,8 @@ class LoanController extends Controller
             'returned_at' => null,
             'status' => 'return_rejected',
             'fine_amount' => 0,
+            'fine_paid_at' => null,
+            'fine_paid_by' => null,
         ]);
 
         $loan->load(['user', 'book']);
@@ -443,5 +453,44 @@ class LoanController extends Controller
         );
 
         return redirect()->route('loans.index')->with('success', 'Permintaan pengembalian berhasil ditolak.');
+    }
+
+    public function payFine(Request $request, Loan $loan): RedirectResponse
+    {
+        abort_unless($request->user()->isAdmin(), 403);
+
+        if ($loan->status !== 'returned') {
+            return back()->with('error', 'Denda hanya dapat dicatat untuk transaksi yang sudah dikembalikan.');
+        }
+
+        if ($loan->fine_amount < 1) {
+            return back()->with('error', 'Transaksi ini tidak memiliki denda yang perlu dibayarkan.');
+        }
+
+        if ($loan->isFinePaid()) {
+            return back()->with('error', 'Denda untuk transaksi ini sudah lunas.');
+        }
+
+        $loan->update([
+            'fine_paid_at' => now(),
+            'fine_paid_by' => $request->user()->id,
+        ]);
+
+        $loan->load(['user', 'book']);
+
+        ActivityLogger::log(
+            $request->user(),
+            'loan.fine.pay',
+            'Mencatat pembayaran denda transaksi: '.$loan->loan_code,
+            $loan,
+            [
+                'anggota' => $loan->user->name,
+                'buku' => $loan->book->title,
+                'denda' => 'Rp '.number_format($loan->fine_amount, 0, ',', '.'),
+                'dibayar_pada' => $loan->fine_paid_at?->format('Y-m-d H:i:s'),
+            ],
+        );
+
+        return redirect()->route('loans.index')->with('success', 'Pembayaran denda berhasil dicatat.');
     }
 }

@@ -42,6 +42,7 @@
                         <th>Jatuh Tempo</th>
                         <th>Status</th>
                         <th>Denda</th>
+                        <th>Pembayaran Denda</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -76,6 +77,16 @@
                                     <p class="table-note">Denda berjalan</p>
                                 @endif
                             </td>
+                            <td>
+                                @if($loan->status !== 'returned' || ! $loan->hasFine())
+                                    <span class="table-note">Belum ada pembayaran</span>
+                                @elseif($loan->isFinePaid())
+                                    <span class="badge fine-paid">LUNAS</span>
+                                    <p class="table-note">{{ $loan->fine_paid_at?->format('d M Y H:i') }}</p>
+                                @else
+                                    <span class="badge fine-unpaid">BELUM LUNAS</span>
+                                @endif
+                            </td>
                             <td class="actions">
                                 @if($isAdmin && $loan->status === 'pending')
                                     <form action="{{ route('loans.approve', $loan) }}" method="POST">
@@ -97,11 +108,23 @@
                                         <button type="submit" class="text-link danger-link">Tolak Pengembalian</button>
                                     </form>
                                 @endif
+                                @if($isAdmin && $loan->status === 'returned' && $loan->hasFine() && ! $loan->isFinePaid())
+                                    <form action="{{ route('loans.fine.pay', $loan) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="text-link">Bayar Denda</button>
+                                    </form>
+                                @endif
                                 @if(! $isAdmin && in_array($loan->status, ['borrowed', 'late', 'return_rejected'], true))
                                     <form action="{{ route('loans.return', $loan) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="text-link">Ajukan Pengembalian</button>
                                     </form>
+                                @endif
+                                @if(! $isAdmin && $loan->status === 'returned' && $loan->hasFine() && ! $loan->isFinePaid())
+                                    <span class="table-note">Menunggu pembayaran denda dikonfirmasi admin</span>
+                                @endif
+                                @if(! $isAdmin && $loan->status === 'returned' && $loan->hasFine() && $loan->isFinePaid())
+                                    <span class="table-note">Denda sudah dibayar</span>
                                 @endif
                                 @if(! $isAdmin && $loan->status === 'pending')
                                     <span class="table-note">Menunggu persetujuan admin</span>
@@ -126,7 +149,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="{{ $isAdmin ? 8 : 7 }}" class="empty">Belum ada transaksi.</td></tr>
+                        <tr><td colspan="{{ $isAdmin ? 9 : 8 }}" class="empty">Belum ada transaksi.</td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -42,7 +42,7 @@
             <article class="stat-card stat-card-clean">
                 <span>Menunggu Persetujuan</span>
                 <strong>{{ $pendingLoanCount }}</strong>
-                <p>Permintaan peminjaman yang masih menunggu persetujuan admin.</p>
+                <p>Permintaan peminjaman dan pengembalian Anda yang masih menunggu persetujuan admin.</p>
             </article>
             <article class="stat-card stat-card-clean">
                 <span>Peminjaman Ditolak</span>

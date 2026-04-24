@@ -570,6 +570,8 @@ th, td { padding: 14px 12px; border-bottom: 1px solid var(--border); text-align:
 .badge.rejected { background: #fee2e2; color: #b91c1c; }
 .badge.return_pending { background: #e0f2fe; color: #0369a1; }
 .badge.return_rejected { background: #ffe4e6; color: #be123c; }
+.badge.fine-paid { background: #dcfce7; color: #15803d; }
+.badge.fine-unpaid { background: #fef3c7; color: #b45309; }
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));

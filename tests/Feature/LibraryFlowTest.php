@@ -169,4 +169,44 @@ class LibraryFlowTest extends TestCase
 
         $this->assertSame(3 * config('library.fine_per_day'), $loan->fresh()->fine_amount);
     }
+
+    public function test_admin_can_mark_returned_loan_fine_as_paid(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $member = User::factory()->create();
+        $category = Category::create([
+            'name' => 'Sains',
+            'slug' => 'sains',
+        ]);
+
+        $book = Book::create([
+            'category_id' => $category->id,
+            'code' => 'BK-PAY',
+            'title' => 'Buku Bayar Denda',
+            'author' => 'Penguji',
+            'stock_total' => 2,
+            'stock_available' => 2,
+        ]);
+
+        $loan = Loan::create([
+            'loan_code' => 'TRX-0200',
+            'user_id' => $member->id,
+            'book_id' => $book->id,
+            'processed_by' => $admin->id,
+            'borrowed_at' => now()->subDays(8)->toDateString(),
+            'due_at' => now()->subDays(3)->toDateString(),
+            'returned_at' => now()->subDay()->toDateString(),
+            'status' => 'returned',
+            'quantity' => 1,
+            'fine_amount' => 3 * config('library.fine_per_day'),
+        ]);
+
+        $this->actingAs($admin)->post(route('loans.fine.pay', $loan))
+            ->assertRedirect(route('loans.index'));
+
+        $loan->refresh();
+
+        $this->assertNotNull($loan->fine_paid_at);
+        $this->assertSame($admin->id, $loan->fine_paid_by);
+    }
 }

@@ -24,6 +24,8 @@ class Loan extends Model
         'note',
         'return_note',
         'fine_amount',
+        'fine_paid_at',
+        'fine_paid_by',
     ];
 
     protected function casts(): array
@@ -33,6 +35,7 @@ class Loan extends Model
             'due_at' => 'date',
             'returned_at' => 'date',
             'fine_amount' => 'integer',
+            'fine_paid_at' => 'datetime',
         ];
     }
 
@@ -69,6 +72,16 @@ class Loan extends Model
         return $this->calculateFineAmount();
     }
 
+    public function hasFine(): bool
+    {
+        return $this->displayFineAmount() > 0;
+    }
+
+    public function isFinePaid(): bool
+    {
+        return $this->fine_paid_at !== null;
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -82,5 +95,10 @@ class Loan extends Model
     public function processor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'processed_by');
+    }
+
+    public function finePayer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'fine_paid_by');
     }
 }

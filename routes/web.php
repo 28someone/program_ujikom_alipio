@@ -27,6 +27,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/transaksi/{loan}/pengembalian', [LoanController::class, 'returnBook'])->name('loans.return');
     Route::post('/transaksi/{loan}/pengembalian/approve', [LoanController::class, 'approveReturn'])->name('loans.return.approve');
     Route::post('/transaksi/{loan}/pengembalian/reject', [LoanController::class, 'rejectReturn'])->name('loans.return.reject');
+    Route::post('/transaksi/{loan}/denda/bayar', [LoanController::class, 'payFine'])->name('loans.fine.pay');
     Route::post('/transaksi/{loan}/approve', [LoanController::class, 'approve'])->name('loans.approve');
     Route::post('/transaksi/{loan}/reject', [LoanController::class, 'reject'])->name('loans.reject');
 

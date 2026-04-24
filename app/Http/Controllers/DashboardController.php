@@ -30,7 +30,7 @@ class DashboardController extends Controller
             return view('dashboard.admin', [
                 'bookCount' => Book::count(),
                 'memberCount' => User::where('role', 'member')->count(),
-                'pendingLoanCount' => Loan::where('status', 'pending')->count(),
+                'pendingLoanCount' => Loan::whereIn('status', ['pending', 'return_pending'])->count(),
                 'rejectedLoanCount' => Loan::where('status', 'rejected')->count(),
                 'rejectedReturnCount' => Loan::where('status', 'return_rejected')->count(),
                 'activeLoanCount' => Loan::whereIn('status', ['borrowed', 'late', 'return_pending', 'return_rejected'])->count(),
@@ -43,7 +43,7 @@ class DashboardController extends Controller
 
         return view('dashboard.member', [
             'availableBooks' => Book::where('stock_available', '>', 0)->count(),
-            'pendingLoanCount' => Loan::where('user_id', $user->id)->where('status', 'pending')->count(),
+            'pendingLoanCount' => Loan::where('user_id', $user->id)->whereIn('status', ['pending', 'return_pending'])->count(),
             'rejectedLoanCount' => Loan::where('user_id', $user->id)->where('status', 'rejected')->count(),
             'rejectedReturnCount' => Loan::where('user_id', $user->id)->where('status', 'return_rejected')->count(),
             'activeLoanCount' => Loan::where('user_id', $user->id)->whereIn('status', ['borrowed', 'late', 'return_pending', 'return_rejected'])->count(),
